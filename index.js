@@ -9,6 +9,7 @@ var port = process.env.PORT || config.get('PORT');
 // const API_KEY = "&appid=8bebd0d8a0a3c015779632cb35e71641"
 
 const SEARCH_TEAM_API = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?"
+const NEXT_5FIX_API = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id="
 
 // const UNITS = "&units=metric"
 
@@ -24,8 +25,15 @@ bot.on('message', (payload, chat) => {
 });
 
 bot.hear(['hi', 'hello'], (payload, chat) => {
-  chat.say('Hi! If you would like to know details about football team, type name of football team in style team *name*', {typing: true})
+  chat.say({
+    attachment: 'image',
+    url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/facebook/230/waving-hand-sign_1f44b.png',
+  });
+  setTimeout(() => {
+    chat.say('Hi! If you would like to know details about football team, type name of football team in style team *name*', {typing: true});
+  },4000 )
 });
+
 
 
 bot.hear(/team (.*)/i, (payload, chat, data) => {
@@ -41,34 +49,81 @@ bot.hear(/team (.*)/i, (payload, chat, data) => {
           } else {
             conversation.say('Found team ' + json.teams[0].strTeam, {typing:true});
             setTimeout(() => {
-              conversation.say("Team was formed in "+json.teams[0].intFormedYear +" and its facebook site is " + json.teams[0].strFacebook, {typing: true});
-              handleMoreDetails(conversation, json);
+              conversation.say("Team was formed in "+json.teams[0].intFormedYear +" and its facebook site is " + json.teams[0].strFacebook, {typing: true})
+              askWhatNext(conversation, json);
+              //handleMoreDetails(conversation, json);
             }, 1000)
           }
         })
   })
 })
 
-
-function handleMoreDetails(conversation, json) {
+function askWhatNext(conversation, json) {
   setTimeout(() => {
     conversation.ask({
-      text: "Would you like to know what league and cups does this team play?",
-      quickReplies: ["Yes", "No"],
+      text: "What would you like to see?",
+      quickReplies: ["More details", "Next 5 fixtures", "Other team"],
       options: {typing: true}
     }, (payload, conversation) => {
-      if (payload.message.text === "Yes") {
-        conversation.say(json.teams[0].strLeague, {typing:true});
-        if (json.teams[0].strLeague2 !== null){
-          conversation.say(json.teams[0].strLeague2, {typing:true});
-        }
-        handleStadiumDetails(conversation, json);
+      if (payload.message.text === "More details") {
+        handleMoreDetails(conversation, json);
+      } else if (payload.message.text === "Next 5 fixtures") {
+        handleNext5Fixtures(conversation, json);
       } else {
         conversation.say("Ok, ask me about a different team then.", {typing: true});
         conversation.end();
       }
     });
   }, 2000)
+}
+
+function handleNext5Fixtures(conversation, json) {
+  const teamId = json.teams[0].idTeam;
+  fetch(NEXT_5FIX_API + teamId)
+      .then(res => res.json())
+      .then(fixturesJSON => {
+        //console.log(fixturesJSON);
+        let events = fixturesJSON.events;
+        //console.log(events);
+        console.log("-------------");
+        //console.log(events[0]);
+        var message = "";
+
+        for (fixture of events){
+          //console.log(fixture.strEvent);
+          message += fixture.dateEvent + "\n" + fixture.strTime + "\n" + fixture.strEvent + "\n\n";
+        }
+        conversation.say(message);
+      })
+}
+
+function handleMoreDetails(conversation, json) {
+  // setTimeout(() => {
+  //   conversation.ask({
+  //     text: "Would you like to know what league and cups does this team play?",
+  //     quickReplies: ["Yes", "No"],
+  //     options: {typing: true}
+  //   }, (payload, conversation) => {
+  //     if (payload.message.text === "Yes") {
+  //       conversation.say(json.teams[0].strLeague, {typing:true});
+  //       if (json.teams[0].strLeague2 !== null){
+  //         conversation.say(json.teams[0].strLeague2, {typing:true});
+  //       }
+  //       handleStadiumDetails(conversation, json);
+  //     } else {
+  //       conversation.say("Ok, ask me about a different team then.", {typing: true});
+  //       conversation.end();
+  //     }
+  //   });
+  // }, 2000)
+  var message = "";
+  message += json.teams[0].strLeague;
+  message += " ";
+  if (json.teams[0].strLeague2 !== null){
+    message += json.teams[0].strLeague2;
+  }
+  conversation.say("This team plays in these leagues and cups: " + message);
+  handleStadiumDetails(conversation, json);
 }
 
 function handleStadiumDetails(conversation, json) {
