@@ -10,6 +10,7 @@ var port = process.env.PORT || config.get('PORT');
 
 const SEARCH_TEAM_API = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?"
 const NEXT_5FIX_API = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id="
+const LAST5RESULTS_API = "https://www.thesportsdb.com/api/v1/json/1/eventslast.php?id="
 
 // const UNITS = "&units=metric"
 
@@ -58,17 +59,20 @@ bot.hear(/team (.*)/i, (payload, chat, data) => {
   })
 })
 
+
 function askWhatNext(conversation, json) {
   setTimeout(() => {
     conversation.ask({
       text: "What would you like to see?",
-      quickReplies: ["More details", "Next 5 fixtures", "Other team"],
+      quickReplies: ["More details", "Next 5 fixtures", "Last 5 results" ,"Other team"],
       options: {typing: true}
     }, (payload, conversation) => {
       if (payload.message.text === "More details") {
         handleMoreDetails(conversation, json);
       } else if (payload.message.text === "Next 5 fixtures") {
         handleNext5Fixtures(conversation, json);
+      } else if (payload.message.text === "Last 5 results") {
+        handleLast5Results(conversation, json);
       } else {
         conversation.say("Ok, ask me about a different team then.", {typing: true});
         conversation.end();
@@ -85,13 +89,39 @@ function handleNext5Fixtures(conversation, json) {
         //console.log(fixturesJSON);
         let events = fixturesJSON.events;
         //console.log(events);
-        console.log("-------------");
+        //console.log("-------------");
         //console.log(events[0]);
         var message = "";
 
         for (fixture of events){
           //console.log(fixture.strEvent);
           message += fixture.dateEvent + "\n" + fixture.strTime + "\n" + fixture.strEvent + "\n\n";
+        }
+        conversation.say(message);
+      })
+}
+
+function handleLast5Results(conversation, json) {
+  const teamId = json.teams[0].idTeam;
+  fetch(LAST5RESULTS_API + teamId)
+      .then(res => res.json())
+      .then(resultsJSON => {
+        //console.log(fixturesJSON);
+        let resultList = resultsJSON.results;
+        //console.log(events);
+        console.log("-------------");
+        //console.log(events[0]);
+        var message = "";
+        console.log(resultList)
+        for (result of resultList){
+          //console.log(fixture.strEvent);
+          console.log(result);
+          message += result.strHomeTeam + " " + result.intHomeScore + "-" + result.intAwayScore + " " + result.strAwayTeam;
+          if (result.strVideo !== null){
+            message += "\n" + "Highlights: " + result.strVideo ;
+            message += "\n";
+          }
+          message += "\n";
         }
         conversation.say(message);
       })
