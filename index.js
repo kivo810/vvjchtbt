@@ -4,15 +4,10 @@ const fetch = require('node-fetch')
 
 var port = process.env.PORT || config.get('PORT');
 
-// const MOVIE_API = "http://www.omdbapi.com/?apikey=8df4f6a8"
-// const WEATHER_API = "http://api.openweathermap.org/data/2.5/"
-// const API_KEY = "&appid=8bebd0d8a0a3c015779632cb35e71641"
-
 const SEARCH_TEAM_API = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?"
 const NEXT_5FIX_API = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id="
 const LAST5RESULTS_API = "https://www.thesportsdb.com/api/v1/json/1/eventslast.php?id="
 
-// const UNITS = "&units=metric"
 
 const bot = new BootBot({
   accessToken: config.get('ACCESS_TOKEN'),
@@ -25,7 +20,7 @@ bot.on('message', (payload, chat) => {
 	console.log(`The user said: ${text}`);
 });
 
-bot.hear(['hi', 'hello'], (payload, chat) => {
+bot.hear(['hi', 'hello', "ahoj", "cau"], (payload, chat) => {
   chat.say({
     attachment: 'image',
     url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/facebook/230/waving-hand-sign_1f44b.png',
@@ -98,6 +93,7 @@ function handleNext5Fixtures(conversation, json) {
           message += fixture.dateEvent + "\n" + fixture.strTime + "\n" + fixture.strEvent + "\n\n";
         }
         conversation.say(message);
+        conversation.end();
       })
 }
 
@@ -124,28 +120,12 @@ function handleLast5Results(conversation, json) {
           message += "\n";
         }
         conversation.say(message);
+        conversation.end();
       })
 }
 
 function handleMoreDetails(conversation, json) {
-  // setTimeout(() => {
-  //   conversation.ask({
-  //     text: "Would you like to know what league and cups does this team play?",
-  //     quickReplies: ["Yes", "No"],
-  //     options: {typing: true}
-  //   }, (payload, conversation) => {
-  //     if (payload.message.text === "Yes") {
-  //       conversation.say(json.teams[0].strLeague, {typing:true});
-  //       if (json.teams[0].strLeague2 !== null){
-  //         conversation.say(json.teams[0].strLeague2, {typing:true});
-  //       }
-  //       handleStadiumDetails(conversation, json);
-  //     } else {
-  //       conversation.say("Ok, ask me about a different team then.", {typing: true});
-  //       conversation.end();
-  //     }
-  //   });
-  // }, 2000)
+
   var message = "";
   message += json.teams[0].strLeague;
   message += " ";
