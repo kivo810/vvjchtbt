@@ -1,12 +1,14 @@
 const BootBot = require('bootbot');
 const config = require('config');
-const fetch = require('node-fetch')
+const fetch = require('node-fetch');
 
 var port = process.env.PORT || config.get('PORT');
 
-const SEARCH_TEAM_API = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?"
-const NEXT_5FIX_API = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id="
-const LAST5RESULTS_API = "https://www.thesportsdb.com/api/v1/json/1/eventslast.php?id="
+// const SEARCH_TEAM_API = "https://www.thesportsdb.com/api/v1/json/1/searchteams.php?"
+// const NEXT_5FIX_API = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id="
+// const LAST5RESULTS_API = "https://www.thesportsdb.com/api/v1/json/1/eventslast.php?id="
+
+const SPORTDB_API = "https://www.thesportsdb.com/api/v1/json/1/";
 
 
 const bot = new BootBot({
@@ -36,7 +38,7 @@ bot.hear(/team (.*)/i, (payload, chat, data) => {
   chat.conversation((conversation) => {
     const team = data.match[1];
     console.log("Somebody asked about team " + team);
-    fetch(SEARCH_TEAM_API + 't=' + team)
+    fetch(SPORTDB_API + 'searchteams.php?t=' + team)
         .then(res => res.json())
         .then(json => {
           if (json.teams == null){
@@ -78,7 +80,7 @@ function askWhatNext(conversation, json) {
 
 function handleNext5Fixtures(conversation, json) {
   const teamId = json.teams[0].idTeam;
-  fetch(NEXT_5FIX_API + teamId)
+  fetch(SPORTDB_API + "eventsnext.php?id=" + teamId)
       .then(res => res.json())
       .then(fixturesJSON => {
         //console.log(fixturesJSON);
@@ -99,13 +101,13 @@ function handleNext5Fixtures(conversation, json) {
 
 function handleLast5Results(conversation, json) {
   const teamId = json.teams[0].idTeam;
-  fetch(LAST5RESULTS_API + teamId)
+  fetch(SPORTDB_API + "eventslast.php?id=" + teamId)
       .then(res => res.json())
       .then(resultsJSON => {
         //console.log(fixturesJSON);
         let resultList = resultsJSON.results;
         //console.log(events);
-        console.log("-------------");
+        //console.log("-------------");
         //console.log(events[0]);
         var message = "";
         console.log(resultList)
@@ -137,7 +139,7 @@ function handleMoreDetails(conversation, json) {
 }
 
 function handleStadiumDetails(conversation, json) {
-  //console.log("im here")
+  console.log("im here")
   setTimeout(() => {
     conversation.ask({
       text: "Would you like to know about stadium of this team??",

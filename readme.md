@@ -48,3 +48,5 @@ vediet aj o stadione, ak nie tak skonci s pozdravom
 * Tam kde je aj video, posle aj link na highlithy
 * Ukonci konverzaciu
 
+
+** odskusane na timoch [arsenal, chelsea, real madrid, barcelona, slavia prague]
